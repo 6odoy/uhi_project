@@ -1,0 +1,37 @@
+# Credenciales y secrets
+.streamlit/secrets.toml
+*.json
+service_account*.json
+credentials*.json
+gee_key*.json
+
+# Entorno Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Datos crudos y pesados (versionar con DVC)
+data/raw/
+data/processed/
+*.parquet
+*.geojson
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlruns/
