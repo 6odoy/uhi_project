@@ -1,4 +1,4 @@
-"""Estrategias de mitigación de islas de calor urbano para Bogotá."""
+"""Urban heat island mitigation strategies for Bogotá."""
 
 from __future__ import annotations
 
@@ -7,129 +7,129 @@ import pandas as pd
 STRATEGIES: list[dict] = [
     {
         "id": "urban_trees",
-        "name": "Arbolado urbano y silvicultura urbana",
-        "category": "Infraestructura Verde",
+        "name": "Urban trees and urban forestry",
+        "category": "Green Infrastructure",
         "lst_reduction_c": -2.5,
         "ndvi_increase": 0.08,
-        "cost_level": "Medio",
-        "timeframe": "Mediano (3-5 años)",
+        "cost_level": "Medium",
+        "timeframe": "Medium (3-5 years)",
         "priority_localidades": ["Ciudad Bolívar", "Kennedy", "Chapinero", "Usaquén"],
-        "co_benefits": "Mejora calidad del aire, reduce escorrentía y aporta biodiversidad urbana.",
+        "co_benefits": "Improves air quality, reduces runoff, and boosts urban biodiversity.",
         "description": (
-            "Siembra y mantenimiento de árboles en vías, parques y espacios públicos. "
-            "Reduce temperatura por sombra y evapotranspiración."
+            "Planting and maintaining trees along streets, parks, and public spaces. "
+            "Reduces temperature through shade and evapotranspiration."
         ),
     },
     {
         "id": "green_roofs",
-        "name": "Techos verdes y jardines verticales",
-        "category": "Infraestructura Verde",
+        "name": "Green roofs and vertical gardens",
+        "category": "Green Infrastructure",
         "lst_reduction_c": -1.8,
         "ndvi_increase": 0.05,
-        "cost_level": "Alto",
-        "timeframe": "Mediano (3-5 años)",
+        "cost_level": "High",
+        "timeframe": "Medium (3-5 years)",
         "priority_localidades": ["Chapinero", "Kennedy", "Ciudad Bolívar"],
-        "co_benefits": "Aísla térmicamente edificaciones, retiene agua lluvia y aumenta biodiversidad.",
+        "co_benefits": "Thermally insulates buildings, retains rainwater, and increases biodiversity.",
         "description": (
-            "Instalación de cubiertas y paredes vegetadas en edificaciones residenciales y comerciales. "
-            "Disminuye la absorción de calor en superficies construidas."
+            "Installation of vegetated roofs and walls on residential and commercial buildings. "
+            "Reduces heat absorption on built surfaces."
         ),
     },
     {
         "id": "parks_green_corridors",
-        "name": "Parques y corredores verdes",
-        "category": "Infraestructura Verde",
+        "name": "Parks and green corridors",
+        "category": "Green Infrastructure",
         "lst_reduction_c": -3.0,
         "ndvi_increase": 0.12,
-        "cost_level": "Alto",
-        "timeframe": "Largo (>5 años)",
+        "cost_level": "High",
+        "timeframe": "Long (>5 years)",
         "priority_localidades": ["Ciudad Bolívar", "Kennedy", "Usaquén"],
-        "co_benefits": "Fomenta recreación, conectividad ecológica y bienestar mental de la comunidad.",
+        "co_benefits": "Promotes recreation, ecological connectivity, and community mental well-being.",
         "description": (
-            "Creación y rehabilitación de parques locales y corredores verdes interconectados. "
-            "Genera el mayor efecto de enfriamiento al combinar vegetación densa con suelo permeable."
+            "Creation and rehabilitation of local parks and interconnected green corridors. "
+            "Produces the strongest cooling effect by combining dense vegetation with permeable ground."
         ),
     },
     {
         "id": "cool_pavements",
-        "name": "Pavimentos y superficies reflectantes",
-        "category": "Infraestructura Gris",
+        "name": "Reflective pavements and surfaces",
+        "category": "Gray Infrastructure",
         "lst_reduction_c": -1.2,
         "ndvi_increase": 0.0,
-        "cost_level": "Medio",
-        "timeframe": "Corto (1-2 años)",
+        "cost_level": "Medium",
+        "timeframe": "Short (1-2 years)",
         "priority_localidades": ["Kennedy", "Ciudad Bolívar"],
-        "co_benefits": "Reduce consumo energético en iluminación pública y mejora confort peatonal.",
+        "co_benefits": "Reduces energy consumption for public lighting and improves pedestrian comfort.",
         "description": (
-            "Reemplazo o recubrimiento de pavimentos oscuros por materiales de alta reflectancia solar. "
-            "Disminuye la absorción de radiación en vías y estacionamientos."
+            "Replacing or coating dark pavements with high solar-reflectance materials. "
+            "Reduces radiation absorption on roads and parking areas."
         ),
     },
     {
         "id": "cool_roofs",
-        "name": "Techos fríos",
-        "category": "Infraestructura Gris",
+        "name": "Cool roofs",
+        "category": "Gray Infrastructure",
         "lst_reduction_c": -1.5,
         "ndvi_increase": 0.0,
-        "cost_level": "Bajo",
-        "timeframe": "Corto (1-2 años)",
+        "cost_level": "Low",
+        "timeframe": "Short (1-2 years)",
         "priority_localidades": ["Ciudad Bolívar", "Kennedy", "Chapinero"],
-        "co_benefits": "Reduce consumo de energía para climatización y prolonga vida útil de cubiertas.",
+        "co_benefits": "Reduces energy consumption for cooling and extends roof lifespan.",
         "description": (
-            "Aplicación de pinturas o materiales reflectantes en cubiertas de viviendas y edificios. "
-            "Es la intervención de menor costo y más rápida implementación."
+            "Application of reflective paints or materials on residential and building roofs. "
+            "The lowest-cost and fastest-to-implement intervention."
         ),
     },
     {
         "id": "urban_water_bodies",
-        "name": "Cuerpos de agua urbanos",
-        "category": "Infraestructura Verde",
+        "name": "Urban water bodies",
+        "category": "Green Infrastructure",
         "lst_reduction_c": -2.0,
         "ndvi_increase": 0.02,
-        "cost_level": "Medio",
-        "timeframe": "Mediano (3-5 años)",
+        "cost_level": "Medium",
+        "timeframe": "Medium (3-5 years)",
         "priority_localidades": ["Kennedy", "Ciudad Bolívar", "Usaquén"],
-        "co_benefits": "Aumenta humedad relativa, provee hábitat acuático y valor estético al espacio público.",
+        "co_benefits": "Increases relative humidity, provides aquatic habitat, and adds aesthetic value to public space.",
         "description": (
-            "Construcción y rehabilitación de fuentes, canales y estanques en espacios públicos. "
-            "El enfriamiento evaporativo reduce la temperatura del aire y superficies adyacentes."
+            "Construction and rehabilitation of fountains, canals, and ponds in public spaces. "
+            "Evaporative cooling lowers air temperature and that of adjacent surfaces."
         ),
     },
     {
         "id": "density_ventilation_zoning",
-        "name": "Regulación de densidad y zonas de ventilación",
-        "category": "Planificación Urbana",
+        "name": "Density regulation and ventilation corridors",
+        "category": "Urban Planning",
         "lst_reduction_c": -0.8,
         "ndvi_increase": 0.0,
-        "cost_level": "Bajo",
-        "timeframe": "Largo (>5 años)",
+        "cost_level": "Low",
+        "timeframe": "Long (>5 years)",
         "priority_localidades": ["Chapinero", "Kennedy", "Ciudad Bolívar"],
-        "co_benefits": "Mejora calidad del aire, reduce contaminación acústica y ordena el crecimiento urbano.",
+        "co_benefits": "Improves air quality, reduces noise pollution, and organizes urban growth.",
         "description": (
-            "Actualización normativa para limitar densidad de construcción y abrir corredores de viento. "
-            "Facilita la circulación del aire fresco y disipa el calor acumulado."
+            "Regulatory update to limit building density and open wind corridors. "
+            "Facilitates fresh air circulation and dissipates accumulated heat."
         ),
     },
     {
         "id": "wetland_restoration",
-        "name": "Restauración de humedales periurbanos",
-        "category": "Infraestructura Verde",
+        "name": "Peri-urban wetland restoration",
+        "category": "Green Infrastructure",
         "lst_reduction_c": -2.2,
         "ndvi_increase": 0.10,
-        "cost_level": "Medio",
-        "timeframe": "Largo (>5 años)",
+        "cost_level": "Medium",
+        "timeframe": "Long (>5 years)",
         "priority_localidades": ["Ciudad Bolívar", "Kennedy", "Usaquén"],
-        "co_benefits": "Captura carbono, filtra agua, reduce riesgo de inundación y protege biodiversidad nativa.",
+        "co_benefits": "Captures carbon, filters water, reduces flood risk, and protects native biodiversity.",
         "description": (
-            "Recuperación y protección de humedales en la periferia urbana de Bogotá. "
-            "Su gran masa de agua y vegetación higrófita produce enfriamiento evaporativo sostenido."
+            "Recovery and protection of wetlands on Bogotá's urban periphery. "
+            "Their large water mass and hygrophilous vegetation produce sustained evaporative cooling."
         ),
     },
 ]
 
 
 def get_strategies_df() -> pd.DataFrame:
-    """Retorna todas las estrategias como DataFrame ordenado por impact_score."""
+    """Return all strategies as a DataFrame sorted by impact_score."""
     df = pd.DataFrame(STRATEGIES)
     df["impact_score"] = (
         df["lst_reduction_c"].abs() * 0.7 + df["ndvi_increase"] * 10 * 0.3
@@ -138,7 +138,7 @@ def get_strategies_df() -> pd.DataFrame:
 
 
 def get_strategies_for_localidad(localidad: str) -> pd.DataFrame:
-    """Filtra estrategias prioritarias para una localidad y las ordena por impact_score."""
+    """Filter priority strategies for a locality and sort them by impact_score."""
     df = get_strategies_df()
     mask = df["priority_localidades"].apply(lambda locs: localidad in locs)
     return df[mask].reset_index(drop=True)
@@ -149,7 +149,7 @@ def simulate_mitigation(
     ndvi_current: float,
     strategy_ids: list[str],
 ) -> dict:
-    """Calcula LST y NDVI proyectados al aplicar las estrategias indicadas."""
+    """Compute projected LST and NDVI when applying the given strategies."""
     id_to_strategy = {s["id"]: s for s in STRATEGIES}
     lst_delta = 0.0
     ndvi_delta = 0.0
@@ -168,7 +168,7 @@ def simulate_mitigation(
 
 
 def get_category_summary() -> pd.DataFrame:
-    """Agrupa estrategias por categoría y calcula estadísticas de impacto."""
+    """Group strategies by category and compute impact statistics."""
     df = pd.DataFrame(STRATEGIES)
     summary = (
         df.groupby("category", as_index=False)

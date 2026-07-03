@@ -137,7 +137,7 @@ requests>=2.31.0      # Para API World Bank si disponible
 3. **Cache obligatorio** en todas las funciones de carga de datos (`@st.cache_data`)
 4. **Tipos anotados** en todas las funciones de `src/`
 5. **Sin comentarios obvios** — solo el "por qué" cuando no sea evidente
-6. **Idioma del código:** inglés para identificadores; español para textos del dashboard
+6. **Idioma del código:** inglés para identificadores y para todos los textos visibles del dashboard (labels, títulos, tooltips, mensajes) — decisión tomada el 2026-07-03. Los nombres propios de las localidades de Bogotá (Chapinero, Ciudad Bolívar, Usaquén, Kennedy) se mantienen tal cual, sin traducir
 7. **Estructura de tabs:** cada tab es autónomo y funciona aunque los otros fallen
 
 ---
