@@ -70,53 +70,18 @@ _PLOTLY = dict(
     title_x=0,
 )
 
-_PLOTLY_LIGHT = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#475569", family="Sora, Inter, sans-serif", size=12),
-    xaxis=dict(
-        gridcolor="rgba(0,0,0,0.06)",
-        zerolinecolor="rgba(0,0,0,0.06)",
-        linecolor="rgba(0,0,0,0.1)",
-        tickfont=dict(size=11),
-    ),
-    yaxis=dict(
-        gridcolor="rgba(0,0,0,0.06)",
-        zerolinecolor="rgba(0,0,0,0.06)",
-        linecolor="rgba(0,0,0,0.1)",
-        tickfont=dict(size=11),
-    ),
-    legend=dict(
-        bgcolor="rgba(0,0,0,0.02)",
-        bordercolor="rgba(0,0,0,0.08)",
-        borderwidth=1,
-        font=dict(size=11),
-    ),
-    margin=dict(l=8, r=8, t=44, b=8),
-    hoverlabel=dict(
-        bgcolor="#ffffff",
-        bordercolor="rgba(0,0,0,0.12)",
-        font=dict(color="#0f172a", size=12),
-    ),
-    title_font=dict(size=13, color="#334155"),
-    title_x=0,)
-
 # ── Tema ───────────────────────────────────────────────────────────────────────
+# Solo modo oscuro — se quitó el toggle de modo claro por decisión de diseño.
 
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
-
-_dark = st.session_state.dark_mode
-_P    = _PLOTLY if _dark else _PLOTLY_LIGHT
+_P = _PLOTLY
 
 # Paleta de texto con contraste verificado (WCAG AA, ≥4.5:1) contra los
-# fondos de cada tema — usada en los bloques HTML armados en Python, donde
-# el CSS estático no puede condicionar el color según el tema activo.
-_MUTED        = "#94a3b8" if _dark else "#475569"
-_ACCENT_BAD   = "#fb923c" if _dark else "#9a3412"   # naranja: alerta / delta negativo
-_ACCENT_GOOD  = "#34d399" if _dark else "#065f46"   # verde: positivo / bajo costo
-_ACCENT_WARM  = "#fbbf24" if _dark else "#92400e"   # ámbar: moderado / costo medio
-_ACCENT_BLUE  = "#60A5FA" if _dark else "#1d4ed8"   # azul: categoría / info
+# fondos oscuros — usada en los bloques HTML armados en Python.
+_MUTED        = "#94a3b8"
+_ACCENT_BAD   = "#fb923c"   # naranja: alerta / delta negativo
+_ACCENT_GOOD  = "#34d399"   # verde: positivo / bajo costo
+_ACCENT_WARM  = "#fbbf24"   # ámbar: moderado / costo medio
+_ACCENT_BLUE  = "#60A5FA"   # azul: categoría / info
 
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
@@ -482,76 +447,8 @@ div[data-testid="stButton"] > button:hover {
     margin: 0;
 }
 
-/* ── Botón de tema ────────────────────────────────────────────────────────── */
 </style>
 """, unsafe_allow_html=True)
-
-# ── CSS modo claro (inyectado condicionalmente) ────────────────────────────────
-
-if not _dark:
-    st.markdown("""
-    <style>
-    html, body, .stApp { background-color: #f0f4f8 !important; color: #0f172a !important; }
-    .block-container { background: #f0f4f8 !important; }
-
-    [data-testid="stSidebar"] {
-        background: #f8fafc !important;
-        border-right: 1px solid rgba(0,0,0,0.08) !important;
-    }
-    [data-testid="stSidebar"] * { color: #475569 !important; }
-    [data-testid="stSidebar"] label { color: #475569 !important; }
-
-    [data-testid="stTabs"] button[role="tab"] p { color: #475569 !important; }
-    [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9a3412 !important; }
-
-    [data-testid="stMetricLabel"] { color: #475569 !important; }
-    [data-testid="stMetricValue"] { color: #0f172a !important; }
-
-    [data-testid="stPlotlyChart"] > div {
-        background: #ffffff !important;
-        border-color: rgba(0,0,0,0.07) !important;
-    }
-    [data-testid="stInfo"] {
-        background: rgba(59,130,246,0.06) !important;
-        border-color: rgba(59,130,246,0.2) !important;
-        color: #1d4ed8 !important;
-    }
-    [data-testid="stSuccess"] {
-        background: rgba(16,185,129,0.06) !important;
-        border-color: rgba(16,185,129,0.2) !important;
-        color: #047857 !important;
-    }
-
-    .kpi-card  { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
-    .kpi-value { color: #0f172a !important; }
-    .kpi-label { color: #475569 !important; }
-
-    .section-title { color: #475569 !important; }
-    .section-line  { background: rgba(0,0,0,0.07) !important; }
-
-    .rank-wrap    { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
-    .rank-table th { color: #475569 !important; background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.06) !important; }
-    .rank-table td { color: #334155 !important; border-color: rgba(0,0,0,0.04) !important; }
-    .rank-table td.loc-name { color: #0f172a !important; }
-    .rank-table tr.critical td { background: rgba(234,88,12,0.05) !important; }
-    .rank-table tr.critical td.loc-name { color: #9a3412 !important; }
-    .rank-table tr:hover td { background: rgba(0,0,0,0.02) !important; }
-
-    .badge-hot  { color: #9a3412 !important; }
-    .badge-warm { color: #92400e !important; }
-    .badge-cool { color: #065f46 !important; }
-
-    .sim-wrap { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
-    .sim-result-box {
-        background: rgba(234,88,12,0.06) !important;
-        border-color: rgba(234,88,12,0.2) !important;
-    }
-    .sim-result-meta { color: #475569 !important; }
-    .sim-result-meta span { color: #0f172a !important; }
-
-    .footer-bar { border-color: rgba(0,0,0,0.07) !important; color: #475569 !important; }
-    </style>
-    """, unsafe_allow_html=True)
 
 
 # ── Logos ─────────────────────────────────────────────────────────────────────
@@ -718,16 +615,6 @@ last_year  = int(df["year"].max())
 def _mean_year(col: str, year: int) -> float:
     s = df[df["year"] == year]
     return float(s[col].mean()) if not s.empty else float("nan")
-
-
-# ── Toggle de tema ────────────────────────────────────────────────────────────
-
-_theme_label = "☀️  Modo claro" if _dark else "🌙  Modo oscuro"
-_spacer, _tbtn = st.columns([9, 1])
-with _tbtn:
-    if st.button(_theme_label, key="theme_toggle"):
-        st.session_state.dark_mode = not _dark
-        st.rerun()
 
 
 # ── Header institucional ───────────────────────────────────────────────────────
