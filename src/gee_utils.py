@@ -11,6 +11,11 @@ GEE_PROJECT: str = ""  # set at runtime via initialize_gee()
 
 LOCALIDADES_ASSET: str = "projects/ee-uhi-bogota/assets/localidades_bogota"
 
+# Nombre real de la propiedad del shapefile IDECA/DANE que identifica la
+# localidad — verificar contra el asset subido antes de correr el pipeline
+# (ej. inspeccionar con `ee.FeatureCollection(LOCALIDADES_ASSET).first().propertyNames().getInfo()`).
+LOCALIDAD_NAME_PROPERTY: str = "NombreLocalidad"
+
 LOCALIDADES_INTERES: list[str] = [
     "Chapinero",
     "Ciudad Bolívar",
@@ -61,13 +66,33 @@ def initialize_gee(
 def get_localidades(asset_path: str) -> ee.FeatureCollection:
     """Load the localidades FeatureCollection and keep only the ones of interest."""
     return ee.FeatureCollection(asset_path).filter(
-        ee.Filter.inList("NombreLocalidad", LOCALIDADES_INTERES)
+        ee.Filter.inList(LOCALIDAD_NAME_PROPERTY, LOCALIDADES_INTERES)
     )
 
 
 # ---------------------------------------------------------------------------
 # Indicator queries
 # ---------------------------------------------------------------------------
+
+
+def get_lst_image_celsius(year: int, geometry: ee.Geometry | None = None) -> ee.Image:
+    """Mean JJA daytime LST composite (°C) from MODIS MOD11A2 for the given year."""
+    collection = (
+        ee.ImageCollection(_MODIS_LST)
+        .filterDate(f"{year}-06-01", f"{year}-08-31")
+        .select("LST_Day_1km")
+    )
+    if geometry is not None:
+        collection = collection.filterBounds(geometry)
+
+    image = collection.mean().multiply(0.02).subtract(273.15).rename("LST_Celsius")
+    return image.clip(geometry) if geometry is not None else image
+
+
+def get_tile_url(image: ee.Image, vis_params: dict) -> str:
+    """Return an XYZ tile URL template for a GEE image (for use with folium/leaflet)."""
+    map_id_dict = ee.Image(image).getMapId(vis_params)
+    return map_id_dict["tile_fetcher"].url_format
 
 
 def get_lst_modis(geometry: ee.Geometry, year: int) -> float | None:

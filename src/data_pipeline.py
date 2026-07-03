@@ -8,6 +8,7 @@ from src.gee_utils import (
     get_ndvi_sentinel,
     get_urban_fraction,
     LOCALIDADES_INTERES,
+    LOCALIDAD_NAME_PROPERTY,
     YEAR_START,
     YEAR_END,
     LOCALIDADES_ASSET,
@@ -22,7 +23,7 @@ def extract_annual_stats(
     records: list[dict] = []
     for localidad in LOCALIDADES_INTERES:
         feature = localidades_fc.filter(
-            ee.Filter.eq("LocNombre", localidad)
+            ee.Filter.eq(LOCALIDAD_NAME_PROPERTY, localidad)
         ).first()
         geometry = feature.geometry()
 

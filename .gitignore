@@ -8,6 +8,7 @@ gee_key*.json
 # Entorno Python
 .venv/
 venv/
+.venv
 env/
 __pycache__/
 *.pyc
