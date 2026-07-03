@@ -488,25 +488,28 @@ def _init_gee() -> bool:
 
 
 @st.cache_resource
-def _build_gee_map():
+def _build_gee_map(_year_stats: pd.DataFrame):
     """Build a folium map with real GEE layers (LST + locality boundaries).
 
     Uses plain folium instead of geemap.foliumap: the installed geemap
     version has a known import bug (name collision in its `basemaps`
     module) that breaks `geemap.foliumap` unconditionally.
+
+    `_year_stats` (leading underscore so Streamlit doesn't try to hash it
+    for the cache key) holds one row per locality for YEAR_END, used only
+    to populate the boundary popups.
     """
     try:
         import folium
+        from branca.colormap import LinearColormap
 
-        m = folium.Map(location=[4.65, -74.08], zoom_start=11, tiles="CartoDB positron")
+        m = folium.Map(location=[4.65, -74.08], zoom_start=11, tiles="CartoDB dark_matter")
 
         localidades_fc = get_localidades(LOCALIDADES_ASSET)
 
-        lst_vis = {
-            "min": 14,
-            "max": 24,
-            "palette": ["2166ac", "67a9cf", "fee090", "fdae61", "d73027"],
-        }
+        lst_min, lst_max = 14, 24
+        lst_palette = ["2166ac", "67a9cf", "fee090", "fdae61", "d73027"]
+        lst_vis = {"min": lst_min, "max": lst_max, "palette": lst_palette}
         lst_image = get_lst_image_celsius(YEAR_END, geometry=localidades_fc.geometry())
         folium.raster_layers.TileLayer(
             tiles=get_tile_url(lst_image, lst_vis),
@@ -516,15 +519,51 @@ def _build_gee_map():
             control=True,
         ).add_to(m)
 
+        colormap = LinearColormap(
+            colors=[f"#{c}" for c in lst_palette],
+            vmin=lst_min,
+            vmax=lst_max,
+            caption=f"Mean JJA LST {YEAR_END} (°C)",
+        )
+        colormap.add_to(m)
+
+        # Dark styling for the Leaflet popup chrome (folium's default popup
+        # is a white box, which clashes with the rest of the dashboard).
+        m.get_root().html.add_child(folium.Element("""
+            <style>
+            .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0c1322 !important; }
+            .leaflet-popup-close-button { color: #94a3b8 !important; }
+            </style>
+        """))
+
         asset_to_canonical = {v: k for k, v in LOCALIDAD_ASSET_NAMES.items()}
         for feature in localidades_fc.getInfo()["features"]:
             asset_name = feature["properties"].get(LOCALIDAD_NAME_PROPERTY, "")
             canonical_name = asset_to_canonical.get(asset_name, asset_name)
             color = LOCALIDAD_COLORS.get(canonical_name, "#94a3b8")
+
+            stats_row = _year_stats[_year_stats["localidad"] == canonical_name]
+            if not stats_row.empty:
+                s = stats_row.iloc[0]
+                popup_html = f"""
+                <div style="font-family:'Sora',sans-serif;background:#0c1322;color:#e2e8f0;padding:10px 12px;border-radius:6px;min-width:150px">
+                  <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:{color}">{canonical_name}</div>
+                  <div style="font-size:0.75rem;line-height:1.7;color:#94a3b8">
+                    LST {YEAR_END}: <strong style="color:#e2e8f0">{s['lst_celsius']:.1f} °C</strong><br>
+                    NDVI: <strong style="color:#e2e8f0">{s['ndvi']:.2f}</strong><br>
+                    % Urban: <strong style="color:#e2e8f0">{s['urban_pct']:.1f}%</strong>
+                  </div>
+                </div>
+                """
+                popup = folium.Popup(popup_html, max_width=220)
+            else:
+                popup = None
+
             folium.GeoJson(
                 feature,
                 name=canonical_name,
                 style_function=lambda _f, c=color: {"color": c, "weight": 3, "fillOpacity": 0},
+                popup=popup,
             ).add_to(m)
 
         folium.LayerControl(collapsed=False).add_to(m)
@@ -796,7 +835,7 @@ with tab2:
     st.markdown('<div class="section-header"><div class="section-dot"></div><h3 class="section-title">Surface Temperature Map</h3><div class="section-line"></div></div>', unsafe_allow_html=True)
 
     if gee_available:
-        m = _build_gee_map()
+        m = _build_gee_map(df_raw[df_raw["year"] == YEAR_END])
         if m:
             try:
                 st.components.v1.html(m._repr_html_(), height=480)
