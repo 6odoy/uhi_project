@@ -137,6 +137,65 @@ def process_wb_csvs(
     return df
 
 
+def extract_colombia_cmip6(
+    output_path: str = "data/processed/wb_colombia.parquet",
+    hist_start: int = 1950,
+    hist_end: int = 2014,
+    proj_start: int = 2015,
+    proj_end: int = 2080,
+) -> pd.DataFrame:
+    """Genera wb_colombia.parquet directamente desde CMIP6 vía Earth Engine.
+
+    Alternativa a `process_wb_csvs()` cuando el portal del World Bank CCKP
+    no está disponible: usa el mismo archivo climático (CMIP6) que alimenta
+    ese portal, promediado sobre el territorio de Colombia con un ensemble
+    de 6 modelos (ver `gee_utils.CMIP6_MODELS`) para estimar min/mediana/max.
+    """
+    from src.gee_utils import (
+        get_colombia_geometry,
+        get_cmip6_annual_series,
+        CMIP6_MODELS,
+        CMIP6_SCENARIO_MAP,
+    )
+
+    geometry = get_colombia_geometry()
+    periods = {
+        "historical": (hist_start, hist_end),
+        "ssp245": (proj_start, proj_end),
+        "ssp585": (proj_start, proj_end),
+    }
+
+    frames: list[pd.DataFrame] = []
+    for cmip6_scenario, (start_year, end_year) in periods.items():
+        model_frames = []
+        for model in CMIP6_MODELS:
+            print(f"Procesando {cmip6_scenario} / {model} ({start_year}-{end_year})...")
+            records = get_cmip6_annual_series(model, cmip6_scenario, geometry, start_year, end_year)
+            model_frames.append(pd.DataFrame(records))
+
+        combined = pd.concat(model_frames, ignore_index=True)
+        agg = combined.groupby("year").agg(
+            tas_mean=("tas_mean", "median"), tas_low=("tas_mean", "min"), tas_high=("tas_mean", "max"),
+            tx35_days=("tx35_days", "median"), tx35_low=("tx35_days", "min"), tx35_high=("tx35_days", "max"),
+            pr_mm=("pr_mm", "median"), pr_low=("pr_mm", "min"), pr_high=("pr_mm", "max"),
+        ).reset_index()
+        agg["scenario"] = CMIP6_SCENARIO_MAP[cmip6_scenario]
+        frames.append(agg)
+
+    df = pd.concat(frames, ignore_index=True)
+    df["year"] = df["year"].astype(int)
+
+    float_cols = [c for c in df.columns if c not in ("year", "scenario")]
+    df[float_cols] = df[float_cols].round(4)
+    df = df[["year", "scenario", *(c for pair in _RAW_VAR_COLUMNS.values() for c in pair)]]
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(output, index=False)
+
+    return df
+
+
 def load_wb_data(path: str = "data/processed/wb_colombia.parquet") -> pd.DataFrame:
     from pathlib import Path
 
@@ -233,7 +292,22 @@ def get_scenario_series(df: pd.DataFrame, variable: str) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
+def _init_gee_from_secrets(path: str = ".streamlit/secrets.toml") -> None:
+    import tomllib
+    from src.gee_utils import initialize_gee
+
+    with open(path, "rb") as f:
+        secrets = tomllib.load(f)
+
+    gee_cfg = secrets["gee"]
+    initialize_gee(
+        project=gee_cfg["project"],
+        service_account_info=gee_cfg.get("service_account") or None,
+    )
+
+
 if __name__ == "__main__":
-    df = process_wb_csvs()
+    _init_gee_from_secrets()
+    df = extract_colombia_cmip6()
     print(f"Guardado {len(df)} filas → data/processed/wb_colombia.parquet\n")
     print(df.groupby("scenario")[["tas_mean", "tx35_days", "pr_mm"]].agg(["min", "mean", "max"]).round(2))
