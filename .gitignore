@@ -15,11 +15,12 @@ __pycache__/
 *.pyo
 .ipynb_checkpoints/
 
-# Datos crudos y pesados (versionar con DVC)
+# Datos crudos y pesados (no versionar — descarga/generación local o DVC)
 data/raw/
-data/processed/
-*.parquet
 *.geojson
+
+# data/processed/*.parquet SÍ se versiona: son los datos (sintéticos o
+# reales) que Streamlit Cloud necesita para que el dashboard no arranque vacío.
 
 # DVC
 .dvc/cache/
