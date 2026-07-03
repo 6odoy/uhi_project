@@ -109,6 +109,15 @@ if "dark_mode" not in st.session_state:
 _dark = st.session_state.dark_mode
 _P    = _PLOTLY if _dark else _PLOTLY_LIGHT
 
+# Paleta de texto con contraste verificado (WCAG AA, ≥4.5:1) contra los
+# fondos de cada tema — usada en los bloques HTML armados en Python, donde
+# el CSS estático no puede condicionar el color según el tema activo.
+_MUTED        = "#94a3b8" if _dark else "#475569"
+_ACCENT_BAD   = "#fb923c" if _dark else "#9a3412"   # naranja: alerta / delta negativo
+_ACCENT_GOOD  = "#34d399" if _dark else "#065f46"   # verde: positivo / bajo costo
+_ACCENT_WARM  = "#fbbf24" if _dark else "#92400e"   # ámbar: moderado / costo medio
+_ACCENT_BLUE  = "#60A5FA" if _dark else "#1d4ed8"   # azul: categoría / info
+
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
 
@@ -142,7 +151,7 @@ html, body, .stApp {
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     font-weight: 600 !important;
-    color: #475569 !important;
+    color: #94a3b8 !important;
 }
 
 /* ── Charts ───────────────────────────────────────────────────────────────── */
@@ -253,7 +262,7 @@ div[data-testid="stButton"] > button:hover {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #475569;
+    color: #94a3b8;
     font-weight: 600;
     margin-bottom: 0.65rem;
 }
@@ -293,7 +302,7 @@ div[data-testid="stButton"] > button:hover {
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #64748b;
+    color: #94a3b8;
     margin: 0;
     white-space: nowrap;
 }
@@ -320,7 +329,7 @@ div[data-testid="stButton"] > button:hover {
     font-size: 0.63rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #475569;
+    color: #94a3b8;
     font-weight: 600;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     background: rgba(0,0,0,0.2);
@@ -376,10 +385,10 @@ div[data-testid="stButton"] > button:hover {
 }
 .sim-result-meta {
     font-size: 0.77rem;
-    color: #64748b;
+    color: #94a3b8;
     line-height: 1.8;
 }
-.sim-result-meta span { color: #94a3b8; }
+.sim-result-meta span { color: #f1f5f9; }
 
 .footer-bar {
     margin-top: 4rem;
@@ -389,7 +398,7 @@ div[data-testid="stButton"] > button:hover {
     justify-content: space-between;
     align-items: center;
     font-size: 0.72rem;
-    color: #334155;
+    color: #94a3b8;
 }
 
 /* ── Institutional header ─────────────────────────────────────────────────── */
@@ -454,7 +463,7 @@ div[data-testid="stButton"] > button:hover {
 }
 .inst-sub {
     font-size: 0.7rem;
-    color: #64748b !important;
+    color: #94a3b8 !important;
     font-weight: 400;
     margin: 0;
 }
@@ -476,7 +485,7 @@ if not _dark:
         border-right: 1px solid rgba(0,0,0,0.08) !important;
     }
     [data-testid="stSidebar"] * { color: #475569 !important; }
-    [data-testid="stSidebar"] label { color: #94a3b8 !important; }
+    [data-testid="stSidebar"] label { color: #475569 !important; }
 
     [data-testid="stPlotlyChart"] > div {
         background: #ffffff !important;
@@ -495,26 +504,32 @@ if not _dark:
 
     .kpi-card  { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
     .kpi-value { color: #0f172a !important; }
-    .kpi-label { color: #94a3b8 !important; }
+    .kpi-label { color: #475569 !important; }
 
-    .section-title { color: #94a3b8 !important; }
+    .section-title { color: #475569 !important; }
     .section-line  { background: rgba(0,0,0,0.07) !important; }
 
     .rank-wrap    { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
-    .rank-table th { color: #94a3b8 !important; background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.06) !important; }
+    .rank-table th { color: #475569 !important; background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.06) !important; }
     .rank-table td { color: #334155 !important; border-color: rgba(0,0,0,0.04) !important; }
+    .rank-table td.loc-name { color: #0f172a !important; }
     .rank-table tr.critical td { background: rgba(234,88,12,0.05) !important; }
-    .rank-table tr.critical td.loc-name { color: #ea580c !important; }
+    .rank-table tr.critical td.loc-name { color: #9a3412 !important; }
     .rank-table tr:hover td { background: rgba(0,0,0,0.02) !important; }
+
+    .badge-hot  { color: #9a3412 !important; }
+    .badge-warm { color: #92400e !important; }
+    .badge-cool { color: #065f46 !important; }
 
     .sim-wrap { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; }
     .sim-result-box {
         background: rgba(234,88,12,0.06) !important;
         border-color: rgba(234,88,12,0.2) !important;
     }
-    .sim-result-meta { color: #94a3b8 !important; }
+    .sim-result-meta { color: #475569 !important; }
+    .sim-result-meta span { color: #0f172a !important; }
 
-    .footer-bar { border-color: rgba(0,0,0,0.07) !important; color: #94a3b8 !important; }
+    .footer-bar { border-color: rgba(0,0,0,0.07) !important; color: #475569 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -812,7 +827,7 @@ with tab1:
             <li><strong>Ciudades:</strong> el efecto de isla de calor urbano amplificará estos aumentos en áreas densamente construidas,
             generando escenarios de riesgo térmico superiores a los proyectados a escala nacional.</li>
           </ul>
-          <p style="margin-top:0.5rem;color:#64748b;font-size:0.78rem;">
+          <p style="margin-top:0.5rem;color:{_MUTED};font-size:0.78rem;">
             Fuente de referencia: World Bank Climate Change Knowledge Portal · Escenarios CMIP5 (RCP4.5 / RCP8.5)
           </p>
         </div>
@@ -1003,9 +1018,9 @@ with tab2:
               <td>{_badge(row['lst_last'])}</td>
               <td>{row['lst_mean']:.2f} °C</td>
               <td>{row['lst_last']:.2f} °C</td>
-              <td style="color:{'#fb923c' if row['lst_change']>0 else '#34d399'};font-weight:600">{row['lst_change']:+.2f} °C</td>
+              <td style="color:{_ACCENT_BAD if row['lst_change']>0 else _ACCENT_GOOD};font-weight:600">{row['lst_change']:+.2f} °C</td>
               <td>{row['ndvi_mean']:.3f}</td>
-              <td style="color:{'#fb923c' if row['ndvi_change']<0 else '#34d399'};font-weight:600">{row['ndvi_change']:+.3f}</td>
+              <td style="color:{_ACCENT_BAD if row['ndvi_change']<0 else _ACCENT_GOOD};font-weight:600">{row['ndvi_change']:+.3f}</td>
               <td>{row['urban_pct_last']:.1f} %</td>
             </tr>"""
 
@@ -1036,7 +1051,7 @@ with tab2:
 
         st.markdown('<div class="sim-wrap">', unsafe_allow_html=True)
         st.markdown(
-            '<p style="font-size:.8rem;color:#64748b;margin:0 0 1.2rem">Ajusta la cobertura vegetal y urbana para estimar la temperatura superficial resultante.</p>',
+            f'<p style="font-size:.8rem;color:{_MUTED};margin:0 0 1.2rem">Ajusta la cobertura vegetal y urbana para estimar la temperatura superficial resultante.</p>',
             unsafe_allow_html=True,
         )
 
@@ -1089,24 +1104,24 @@ with tab3:
     # Matriz de estrategias
     st.markdown('<div class="section-header"><div class="section-dot"></div><h3 class="section-title">Matriz de impacto por estrategia</h3><div class="section-line"></div></div>', unsafe_allow_html=True)
 
-    cost_color = {"Bajo": "#34D399", "Medio": "#FBBF24", "Alto": "#F97316"}
+    cost_color = {"Bajo": _ACCENT_GOOD, "Medio": _ACCENT_WARM, "Alto": _ACCENT_BAD}
     rows_s = ""
     for _, row in strat_df.iterrows():
         bar_w = int(abs(row["lst_reduction_c"]) / 3.0 * 100)
-        cc = cost_color.get(row["cost_level"], "#94a3b8")
+        cc = cost_color.get(row["cost_level"], _MUTED)
         rows_s += f"""
         <tr>
           <td style="font-weight:600">{row['name']}</td>
-          <td><span style="background:rgba(96,165,250,0.15);color:#60A5FA;padding:2px 8px;border-radius:4px;font-size:.75rem">{row['category']}</span></td>
+          <td><span style="background:rgba(96,165,250,0.15);color:{_ACCENT_BLUE};padding:2px 8px;border-radius:4px;font-size:.75rem">{row['category']}</span></td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="width:{bar_w}%;height:6px;background:#F97316;border-radius:3px;min-width:4px"></div>
-              <span style="color:#F97316;font-weight:600">{row['lst_reduction_c']:.1f} °C</span>
+              <span style="color:{_ACCENT_BAD};font-weight:600">{row['lst_reduction_c']:.1f} °C</span>
             </div>
           </td>
-          <td style="color:#34D399;font-weight:600">+{row['ndvi_increase']:.2f}</td>
+          <td style="color:{_ACCENT_GOOD};font-weight:600">+{row['ndvi_increase']:.2f}</td>
           <td><span style="color:{cc};font-weight:600">{row['cost_level']}</span></td>
-          <td style="font-size:.78rem;color:#94a3b8">{row['timeframe']}</td>
+          <td style="font-size:.78rem;color:{_MUTED}">{row['timeframe']}</td>
           <td style="font-size:.75rem">{row['co_benefits']}</td>
         </tr>"""
 
@@ -1141,7 +1156,7 @@ with tab3:
         accent = list(LOCALIDAD_COLORS.values())[idx % len(LOCALIDAD_COLORS)]
         items_html = "".join(
             f'<li style="margin:4px 0;font-size:.82rem"><strong>{r["name"]}</strong>'
-            f'<span style="color:#94a3b8;margin-left:8px">{r["lst_reduction_c"]:.1f} °C · {r["cost_level"]}</span></li>'
+            f'<span style="color:{_MUTED};margin-left:8px">{r["lst_reduction_c"]:.1f} °C · {r["cost_level"]}</span></li>'
             for _, r in loc_strat.head(4).iterrows()
         )
         with cols_loc[idx]:
@@ -1157,7 +1172,7 @@ with tab3:
 
     st.markdown('<div class="sim-wrap">', unsafe_allow_html=True)
     st.markdown(
-        '<p style="font-size:.8rem;color:#64748b;margin:0 0 1.2rem">Selecciona estrategias y una localidad para estimar la reducción de temperatura superficial resultante.</p>',
+        f'<p style="font-size:.8rem;color:{_MUTED};margin:0 0 1.2rem">Selecciona estrategias y una localidad para estimar la reducción de temperatura superficial resultante.</p>',
         unsafe_allow_html=True,
     )
 
