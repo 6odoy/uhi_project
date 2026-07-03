@@ -154,6 +154,20 @@ html, body, .stApp {
     color: #94a3b8 !important;
 }
 
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+[data-testid="stTabs"] button[role="tab"] p {
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+}
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    color: #f97316 !important;
+    font-weight: 600 !important;
+}
+
+/* ── Metric (st.metric) ───────────────────────────────────────────────────── */
+[data-testid="stMetricLabel"] { color: #94a3b8 !important; }
+[data-testid="stMetricValue"] { color: #f1f5f9 !important; }
+
 /* ── Charts ───────────────────────────────────────────────────────────────── */
 [data-testid="stPlotlyChart"] > div {
     background: #0c1322 !important;
@@ -486,6 +500,12 @@ if not _dark:
     }
     [data-testid="stSidebar"] * { color: #475569 !important; }
     [data-testid="stSidebar"] label { color: #475569 !important; }
+
+    [data-testid="stTabs"] button[role="tab"] p { color: #475569 !important; }
+    [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9a3412 !important; }
+
+    [data-testid="stMetricLabel"] { color: #475569 !important; }
+    [data-testid="stMetricValue"] { color: #0f172a !important; }
 
     [data-testid="stPlotlyChart"] > div {
         background: #ffffff !important;
