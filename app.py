@@ -22,6 +22,7 @@ from src.gee_utils import (
     get_tile_url,
     LOCALIDADES_ASSET,
     LOCALIDAD_NAME_PROPERTY,
+    LOCALIDAD_ASSET_NAMES,
     YEAR_END,
 )
 from src.wb_pipeline import load_wb_data, get_temperature_kpis, get_heatdays_kpis, get_precip_kpis, get_scenario_series
@@ -545,7 +546,7 @@ def _init_gee() -> bool:
         if not gee_cfg:
             return False
         initialize_gee(
-            project=gee_cfg.get("project", "ee-uhi-bogota"),
+            project=gee_cfg.get("project", "uhi-bogota"),
             service_account_info=dict(gee_cfg.get("service_account", {})) or None,
         )
         import ee
@@ -584,12 +585,14 @@ def _build_gee_map():
             control=True,
         ).add_to(m)
 
+        asset_to_canonical = {v: k for k, v in LOCALIDAD_ASSET_NAMES.items()}
         for feature in localidades_fc.getInfo()["features"]:
-            name = feature["properties"].get(LOCALIDAD_NAME_PROPERTY, "")
-            color = LOCALIDAD_COLORS.get(name, "#94a3b8")
+            asset_name = feature["properties"].get(LOCALIDAD_NAME_PROPERTY, "")
+            canonical_name = asset_to_canonical.get(asset_name, asset_name)
+            color = LOCALIDAD_COLORS.get(canonical_name, "#94a3b8")
             folium.GeoJson(
                 feature,
-                name=name,
+                name=canonical_name,
                 style_function=lambda _f, c=color: {"color": c, "weight": 3, "fillOpacity": 0},
             ).add_to(m)
 

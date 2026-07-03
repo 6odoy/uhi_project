@@ -9,6 +9,7 @@ from src.gee_utils import (
     get_urban_fraction,
     LOCALIDADES_INTERES,
     LOCALIDAD_NAME_PROPERTY,
+    LOCALIDAD_ASSET_NAMES,
     YEAR_START,
     YEAR_END,
     LOCALIDADES_ASSET,
@@ -23,7 +24,7 @@ def extract_annual_stats(
     records: list[dict] = []
     for localidad in LOCALIDADES_INTERES:
         feature = localidades_fc.filter(
-            ee.Filter.eq(LOCALIDAD_NAME_PROPERTY, localidad)
+            ee.Filter.eq(LOCALIDAD_NAME_PROPERTY, LOCALIDAD_ASSET_NAMES[localidad])
         ).first()
         geometry = feature.geometry()
 
@@ -85,7 +86,22 @@ def validate_dataframe(df: pd.DataFrame) -> dict:
     }
 
 
+def _init_gee_from_secrets(path: str = ".streamlit/secrets.toml") -> None:
+    import tomllib
+    from src.gee_utils import initialize_gee
+
+    with open(path, "rb") as f:
+        secrets = tomllib.load(f)
+
+    gee_cfg = secrets["gee"]
+    initialize_gee(
+        project=gee_cfg["project"],
+        service_account_info=gee_cfg.get("service_account") or None,
+    )
+
+
 if __name__ == "__main__":
+    _init_gee_from_secrets()
     df = extract_annual_stats()
     stats = validate_dataframe(df)
     print(stats)

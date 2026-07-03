@@ -22,7 +22,8 @@ def compute_correlations(df: pd.DataFrame) -> pd.DataFrame:
     records = []
     for localidad, group in df.groupby("localidad"):
         for x_col, y_col in PAIRS:
-            x, y = group[x_col].values, group[y_col].values
+            pair_df = group[[x_col, y_col]].dropna()
+            x, y = pair_df[x_col].values, pair_df[y_col].values
             pr, pp = stats.pearsonr(x, y)
             sr, sp = stats.spearmanr(x, y)
             records.append(
@@ -43,9 +44,9 @@ def compute_trends(df: pd.DataFrame) -> pd.DataFrame:
     records = []
     for localidad, group in df.groupby("localidad"):
         group_sorted = group.sort_values("year")
-        years = group_sorted["year"].values
         for variable in ("lst_celsius", "ndvi"):
-            values = group_sorted[variable].values
+            valid = group_sorted[["year", variable]].dropna()
+            years, values = valid["year"].values, valid[variable].values
             slope, _, r_value, _, _ = stats.linregress(years, values)
             mk_result = mk.original_test(values)
             records.append(
@@ -96,8 +97,9 @@ def get_critical_localidades(df: pd.DataFrame, top_n: int = 2) -> list[str]:
 
 def fit_lst_model(df: pd.DataFrame) -> dict:
     """OLS fit for LST ~ NDVI + urban_pct using the normal equations."""
-    y = df["lst_celsius"].values
-    X = np.column_stack([np.ones(len(y)), df["ndvi"].values, df["urban_pct"].values])
+    valid = df[["lst_celsius", "ndvi", "urban_pct"]].dropna()
+    y = valid["lst_celsius"].values
+    X = np.column_stack([np.ones(len(y)), valid["ndvi"].values, valid["urban_pct"].values])
     coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
     intercept, coef_ndvi, coef_urban = coeffs
     y_pred = X @ coeffs

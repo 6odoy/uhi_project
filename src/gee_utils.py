@@ -9,12 +9,14 @@ from google.oauth2 import service_account
 
 GEE_PROJECT: str = ""  # set at runtime via initialize_gee()
 
-LOCALIDADES_ASSET: str = "projects/ee-uhi-bogota/assets/localidades_bogota"
+LOCALIDADES_ASSET: str = "projects/uhi-bogota/assets/localidades_bogota"
 
-# Nombre real de la propiedad del shapefile IDECA/DANE que identifica la
-# localidad — verificar contra el asset subido antes de correr el pipeline
-# (ej. inspeccionar con `ee.FeatureCollection(LOCALIDADES_ASSET).first().propertyNames().getInfo()`).
-LOCALIDAD_NAME_PROPERTY: str = "NombreLocalidad"
+# Nombre real de la propiedad del asset que identifica la localidad — viene
+# del dataset oficial de datos abiertos de Bogotá (Nataliagarzon/Localidades
+# en GitHub, espejo del portal IDECA). El asset se subió como shapefile
+# (.zip), que trunca los nombres de campo ESRI a 10 caracteres: el campo
+# original "Nombre de la localidad" quedó como "Nombre de".
+LOCALIDAD_NAME_PROPERTY: str = "Nombre de"
 
 LOCALIDADES_INTERES: list[str] = [
     "Chapinero",
@@ -22,6 +24,16 @@ LOCALIDADES_INTERES: list[str] = [
     "Usaquén",
     "Kennedy",
 ]
+
+# El asset trae los nombres en mayúsculas y sin tildes (formato de datos
+# abiertos de Bogotá) — mapeo nombre canónico (usado en todo el dashboard)
+# → valor real de la propiedad en el asset, solo para filtrar en GEE.
+LOCALIDAD_ASSET_NAMES: dict[str, str] = {
+    "Chapinero": "CHAPINERO",
+    "Ciudad Bolívar": "CIUDAD BOLIVAR",
+    "Usaquén": "USAQUEN",
+    "Kennedy": "KENNEDY",
+}
 
 YEAR_START: int = 2015
 YEAR_END: int = 2025
@@ -66,7 +78,7 @@ def initialize_gee(
 def get_localidades(asset_path: str) -> ee.FeatureCollection:
     """Load the localidades FeatureCollection and keep only the ones of interest."""
     return ee.FeatureCollection(asset_path).filter(
-        ee.Filter.inList(LOCALIDAD_NAME_PROPERTY, LOCALIDADES_INTERES)
+        ee.Filter.inList(LOCALIDAD_NAME_PROPERTY, list(LOCALIDAD_ASSET_NAMES.values()))
     )
 
 
@@ -130,7 +142,9 @@ def get_ndvi_sentinel(geometry: ee.Geometry, year: int) -> float | None:
             ee.ImageCollection(_SENTINEL2)
             .filterDate(f"{year}-01-01", f"{year}-12-31")
             .filterBounds(geometry)
-            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
+            # 40% en vez de 20%: Bogotá es una zona muy nublada — con 20%
+            # algunos años quedan con 0 imágenes disponibles.
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 40))
         )
 
         if collection.size().getInfo() == 0:
