@@ -14,7 +14,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from src.data_pipeline import load_processed_data
-from src.analysis import compute_correlations, rank_localidades, fit_lst_model, predict_lst
+from src.analysis import compute_correlations, compute_trends, rank_localidades, fit_lst_model, predict_lst
 from src.gee_utils import (
     initialize_gee,
     get_localidades,
@@ -23,7 +23,6 @@ from src.gee_utils import (
     LOCALIDADES_ASSET,
     LOCALIDAD_NAME_PROPERTY,
     LOCALIDAD_ASSET_NAMES,
-    YEAR_END,
 )
 from src.wb_pipeline import load_wb_data, get_temperature_kpis, get_heatdays_kpis, get_precip_kpis, get_scenario_series
 from src.strategies import get_strategies_df, get_strategies_for_localidad, simulate_mitigation, get_category_summary
@@ -488,16 +487,18 @@ def _init_gee() -> bool:
 
 
 @st.cache_resource
-def _build_gee_map(_year_stats: pd.DataFrame):
+def _build_gee_map(year: int, _year_stats: pd.DataFrame):
     """Build a folium map with real GEE layers (LST + locality boundaries).
 
     Uses plain folium instead of geemap.foliumap: the installed geemap
     version has a known import bug (name collision in its `basemaps`
     module) that breaks `geemap.foliumap` unconditionally.
 
-    `_year_stats` (leading underscore so Streamlit doesn't try to hash it
-    for the cache key) holds one row per locality for YEAR_END, used only
-    to populate the boundary popups.
+    `year` selects which year's LST composite to show — it's a normal
+    (hashable) argument, so Streamlit caches one map per year picked.
+    `_year_stats` (leading underscore so Streamlit doesn't try to hash it)
+    holds one row per locality for that same year, used to populate the
+    boundary popups.
     """
     try:
         import folium
@@ -510,11 +511,11 @@ def _build_gee_map(_year_stats: pd.DataFrame):
         lst_min, lst_max = 14, 24
         lst_palette = ["2166ac", "67a9cf", "fee090", "fdae61", "d73027"]
         lst_vis = {"min": lst_min, "max": lst_max, "palette": lst_palette}
-        lst_image = get_lst_image_celsius(YEAR_END, geometry=localidades_fc.geometry())
+        lst_image = get_lst_image_celsius(year, geometry=localidades_fc.geometry())
         folium.raster_layers.TileLayer(
             tiles=get_tile_url(lst_image, lst_vis),
             attr="Google Earth Engine",
-            name=f"Mean JJA LST {YEAR_END} (°C)",
+            name=f"Mean JJA LST {year} (°C)",
             overlay=True,
             control=True,
         ).add_to(m)
@@ -523,7 +524,7 @@ def _build_gee_map(_year_stats: pd.DataFrame):
             colors=[f"#{c}" for c in lst_palette],
             vmin=lst_min,
             vmax=lst_max,
-            caption=f"Mean JJA LST {YEAR_END} (°C)",
+            caption=f"Mean JJA LST {year} (°C)",
         )
         colormap.add_to(m)
 
@@ -549,7 +550,7 @@ def _build_gee_map(_year_stats: pd.DataFrame):
                 <div style="font-family:'Sora',sans-serif;background:#0c1322;color:#e2e8f0;padding:10px 12px;border-radius:6px;min-width:150px">
                   <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:{color}">{canonical_name}</div>
                   <div style="font-size:0.75rem;line-height:1.7;color:#94a3b8">
-                    LST {YEAR_END}: <strong style="color:#e2e8f0">{s['lst_celsius']:.1f} °C</strong><br>
+                    LST {year}: <strong style="color:#e2e8f0">{s['lst_celsius']:.1f} °C</strong><br>
                     NDVI: <strong style="color:#e2e8f0">{s['ndvi']:.2f}</strong><br>
                     % Urban: <strong style="color:#e2e8f0">{s['urban_pct']:.1f}%</strong>
                   </div>
@@ -592,6 +593,10 @@ def _cached_rank(data: pd.DataFrame) -> pd.DataFrame:
 @st.cache_data(ttl=3600)
 def _cached_model(data: pd.DataFrame) -> dict:
     return fit_lst_model(data)
+
+@st.cache_data(ttl=3600)
+def _cached_trends(data: pd.DataFrame) -> pd.DataFrame:
+    return compute_trends(data)
 
 
 try:
@@ -835,7 +840,9 @@ with tab2:
     st.markdown('<div class="section-header"><div class="section-dot"></div><h3 class="section-title">Surface Temperature Map</h3><div class="section-line"></div></div>', unsafe_allow_html=True)
 
     if gee_available:
-        m = _build_gee_map(df_raw[df_raw["year"] == YEAR_END])
+        map_years = list(range(first_year, last_year + 1))
+        map_year = st.selectbox("Map year", options=map_years, index=len(map_years) - 1, key="map_year")
+        m = _build_gee_map(map_year, df_raw[df_raw["year"] == map_year])
         if m:
             try:
                 st.components.v1.html(m._repr_html_(), height=480)
@@ -986,6 +993,58 @@ with tab2:
 
     except Exception as exc:
         st.warning(f"Could not generate the ranking: {exc}")
+
+    # ── Trend analysis ──────────────────────────────────────────────────────────
+
+    st.markdown('<div class="section-header"><div class="section-dot"></div><h3 class="section-title">Statistical Trend Analysis</h3><div class="section-line"></div></div>', unsafe_allow_html=True)
+
+    try:
+        trends_df = _cached_trends(df)
+
+        def _trend_badge(row: pd.Series, higher_is_bad: bool) -> str:
+            trend, p_value, slope = row["mk_trend"], row["mk_p_value"], row["slope"]
+            significant = p_value < 0.05
+            if trend == "increasing":
+                color, arrow = (_ACCENT_BAD if higher_is_bad else _ACCENT_GOOD), "↑"
+            elif trend == "decreasing":
+                color, arrow = (_ACCENT_GOOD if higher_is_bad else _ACCENT_BAD), "↓"
+            else:
+                color, arrow = _MUTED, "→"
+            sig_label = "significant" if significant else "not significant"
+            return (
+                f'<span style="color:{color};font-weight:600">{arrow} {slope:+.3f}/yr</span> '
+                f'<span style="font-size:0.68rem;color:{_MUTED}">({sig_label}, p={p_value:.3f})</span>'
+            )
+
+        rows_tr = ""
+        for localidad in df_s["localidad"].unique():
+            lst_row = trends_df[(trends_df["localidad"] == localidad) & (trends_df["variable"] == "lst_celsius")]
+            ndvi_row = trends_df[(trends_df["localidad"] == localidad) & (trends_df["variable"] == "ndvi")]
+            lst_html = _trend_badge(lst_row.iloc[0], higher_is_bad=True) if not lst_row.empty else "N/A"
+            ndvi_html = _trend_badge(ndvi_row.iloc[0], higher_is_bad=False) if not ndvi_row.empty else "N/A"
+            rows_tr += f"""
+            <tr>
+              <td class="loc-name">{localidad}</td>
+              <td>{lst_html}</td>
+              <td>{ndvi_html}</td>
+            </tr>"""
+
+        st.markdown(f"""
+        <div class="rank-wrap">
+          <table class="rank-table">
+            <thead>
+              <tr><th>Locality</th><th>LST Trend</th><th>NDVI Trend</th></tr>
+            </thead>
+            <tbody>{rows_tr}</tbody>
+          </table>
+        </div>
+        <p style="font-size:.72rem;color:{_MUTED};margin-top:.6rem">
+          Mann-Kendall non-parametric trend test (α = 0.05); slope from linear regression, in units per year.
+        </p>
+        """, unsafe_allow_html=True)
+
+    except Exception as exc:
+        st.warning(f"Could not compute trend analysis: {exc}")
 
     # ── UHI scenario simulator ──────────────────────────────────────────────────
 
