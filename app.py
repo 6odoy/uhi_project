@@ -504,7 +504,7 @@ def _build_gee_map(year: int, _year_stats: pd.DataFrame):
         import folium
         from branca.colormap import LinearColormap
 
-        m = folium.Map(location=[4.65, -74.08], zoom_start=11, tiles="CartoDB dark_matter")
+        m = folium.Map(location=[4.65, -74.08], zoom_start=11, tiles="CartoDB positron")
 
         localidades_fc = get_localidades(LOCALIDADES_ASSET)
 
